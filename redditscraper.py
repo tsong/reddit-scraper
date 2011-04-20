@@ -98,8 +98,3 @@ class RedditScraper:
 		
 		print '    writing %d submissions (minscore = %d) to database...' % (len(page['data']['children']), minscore)
 		return (after, minscore)
-		
-
-
-s = RedditScraper()
-s.scrape()
