@@ -1,7 +1,7 @@
 import httplib
 import json
 import time
-from redditdb import *
+import redditdb
 
 _host = 'www.reddit.com'
 _headers = {"User-agent" : "rs-v1"}
@@ -30,22 +30,24 @@ def _prepareurl(url, after=None):
 
 class RedditScraper:
 	def __init__(self, dbname='default.db'):
-		#self.db = RedditDatabase(dbname)
+		self.db = redditdb.RedditDatabase(dbname)
 		pass
 		
 		
 	def scrape(self, url='/top/?t=all', pagelimit=-1, scorelimit=-1, delay=1):
 		minscore = _maxscore
 		after = None
+		pagenum = 0
 		
 		while pagelimit != 0 and minscore > scorelimit:
+			pagenum += 1
 			url = _prepareurl(url, after)
+			print 'Requesting ', _host + url, ' (page %d)...' % pagenum
 			res = self._scrapepage(url, pagelimit, scorelimit, delay, _retries)
 			
 			if res:
 				(after, minscore) = res
 				pagelimit -= 1
-				
 			if not res or not after:
 				print 'scrape finished'
 				break
@@ -55,8 +57,6 @@ class RedditScraper:
 		if tries == 0:
 			print 'Failed to scrape %s...' % (_host + url)
 			return None
-	
-		print 'Requesting ', _host + url, '...'
 	
 		try:
 			#connect to Reddit and download JSON page
@@ -88,15 +88,15 @@ class RedditScraper:
 			return (None, 0)
 			
 		after = page['data']['after']
-		minscore = 9999999	#effectively infinity
+		minscore = _maxscore
 		
 		for child in page['data']['children']:
 			if child['kind'] == 't3':
 				sub = child['data']
-				#self.db.writesubmission(sub)
+				self.db.writesubmission(sub)
 				minscore = min( minscore, int(sub['score']) )
 		
-		print '    submissions: %d, minscore: %d, after: %s' % (len(page['data']['children']), minscore, after)
+		print '    writing %d submissions (minscore = %d) to database...' % (len(page['data']['children']), minscore)
 		return (after, minscore)
 		
 
