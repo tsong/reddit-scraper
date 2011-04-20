@@ -11,7 +11,7 @@ def _prepareurl(url, after=None):
 	if len(tokens) not in (1,2):
 		raise Exception( "Improperly formed URL %s", url )
 	
-	url = tokens[0] + '.json'
+	url = tokens[0] + ('.json' if not tokens[0].endswith('.json') else '')
 	query = ''
 	if len(tokens) > 1: 
 		queries = tokens[1].split('&')
@@ -40,6 +40,8 @@ class RedditScraper:
 	def _scrape(self, url, pagelimit, scorelimit, delay, tries=3):
 		if pagelimit == 0 or tries == 0: 
 			return
+			
+		print 'Requesting ', 'www.reddit.com' + url, '...'
 	
 		try:
 			#connect to Reddit and download JSON page
@@ -80,9 +82,9 @@ class RedditScraper:
 			if child['kind'] == 't3':
 				sub = child['data']
 				#self.db.writesubmission(sub)
-				print sub
 				minscore = min( minscore, int(sub['score']) )
 		
+		print '    submissions: %d, minscore: %d, after: %s' % (len(page['data']['children']), minscore, after)
 		return (after, minscore)
 		
 
