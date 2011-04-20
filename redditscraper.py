@@ -3,8 +3,10 @@ import json
 import time
 from redditdb import *
 
-
+_host = 'www.reddit.com'
 _headers = {"User-agent" : "rs-v1"}
+_retries = 3
+_maxscore = 99999999
 
 def _prepareurl(url, after=None):
 	tokens = url.split('?')
@@ -33,19 +35,32 @@ class RedditScraper:
 		
 		
 	def scrape(self, url='/top/?t=all', pagelimit=-1, scorelimit=-1, delay=1):
-		url = _prepareurl(url)
-		self._scrape(url, pagelimit, scorelimit, delay)
+		minscore = _maxscore
+		after = None
 		
-		
-	def _scrape(self, url, pagelimit, scorelimit, delay, tries=3):
-		if pagelimit == 0 or tries == 0: 
-			return
+		while pagelimit != 0 and minscore > scorelimit:
+			url = _prepareurl(url, after)
+			res = self._scrapepage(url, pagelimit, scorelimit, delay, _retries)
 			
-		print 'Requesting ', 'www.reddit.com' + url, '...'
+			if res:
+				(after, minscore) = res
+				pagelimit -= 1
+				
+			if not res or not after:
+				print 'scrape finished'
+				break
+
+		
+	def _scrapepage(self, url, pagelimit, scorelimit, delay, tries):
+		if tries == 0:
+			print 'Failed to scrape %s...' % (_host + url)
+			return None
+	
+		print 'Requesting ', _host + url, '...'
 	
 		try:
 			#connect to Reddit and download JSON page
-			conn = httplib.HTTPConnection('www.reddit.com', 80)
+			conn = httplib.HTTPConnection(_host)
 			conn.request('GET', url, headers=_headers)
 			resp = conn.getresponse()
 			data = resp.read()
@@ -59,16 +74,13 @@ class RedditScraper:
 				return
 			
 			time.sleep(delay)
-			
-			url = _prepareurl(url, after)
-			self._scrape(url, pagelimit-1, scorelimit, delay)
-
+			return (after, minscore)
 		except Exception as e:
 			print 'Reddit Scrapper Error:', e
-			print '    retrying... (%d tries remaining)' % (tries-1)
-			self._scrape(url, pagelimit, scorelimit, delay, tries-1)
-				
-
+			print 'retrying %s...' % (_host + url)
+			return self._scrapepage(url, pagelimit, scorelimit, delay, tries-1)
+			
+			
 			
 	def _parsepage(self, data):
 		page = json.loads(data)
