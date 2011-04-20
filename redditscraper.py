@@ -1,12 +1,30 @@
 import httplib
+import urllib
 import json
 import time
 import redditdb
+import random
 
 _host = 'www.reddit.com'
 _headers = {"User-agent" : "rs-v1"}
 _retries = 3
 _maxscore = 99999999
+
+_searchurl = '/search?sort=top&q='
+def searchscrape(words, scraper=None, pagelimit=-1, scorelimit=-1):
+	if not scraper:
+		scraper = RedditScraper()
+		
+	for line in words:
+		line = line.strip()
+		
+		print 'scraping search results of "%s"' % line
+		url = _searchurl + urllib.quote(line)
+		res = scraper.scrape(url, pagelimit, scorelimit)
+		
+		if not res: 
+			break
+
 
 def _prepareurl(url, after=None):
 	tokens = url.split('?')
@@ -50,7 +68,9 @@ class RedditScraper:
 				pagelimit -= 1
 			if not res or not after:
 				print 'scrape finished'
-				break
+				return res != None
+				
+		return True
 
 		
 	def _scrapepage(self, url, pagelimit, scorelimit, delay, tries):
@@ -70,16 +90,12 @@ class RedditScraper:
 				raise Exception( 'Bad Response (%d %s)' % (resp.status, resp.reason) )
 			
 			(after, minscore) = self._parsepage(data)
-			if after == None or minscore < scorelimit:
-				return
-			
 			time.sleep(delay)
 			return (after, minscore)
 		except Exception as e:
 			print 'Reddit Scrapper Error:', e
 			print 'retrying %s...' % (_host + url)
 			return self._scrapepage(url, pagelimit, scorelimit, delay, tries-1)
-			
 			
 			
 	def _parsepage(self, data):
@@ -98,3 +114,9 @@ class RedditScraper:
 		
 		print '    writing %d submissions (minscore = %d) to database...' % (len(page['data']['children']), minscore)
 		return (after, minscore)
+		
+		
+if __name__ == '__main__':
+	words = open('dict.txt').readlines()
+	random.shuffle(words)
+	searchscrape(words, scorelimit=30)

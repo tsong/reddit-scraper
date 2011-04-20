@@ -53,7 +53,8 @@ class RedditDatabase:
 		try:
 			cursor.execute(INSERT_SQL, row)
 		except sqlite3.IntegrityError:
-			print 'Reddit database: %s is already in database' % str(pk)
+			#print 'Reddit database: %s is already in database' % str(pk)
+			pass
 		else:
 			self.conn.commit()
 			cursor.close()
