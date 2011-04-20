@@ -1,0 +1,66 @@
+===============================================================================
+                               REDDIT SCRAPER
+===============================================================================
+
+==================
+Introduction
+==================
+
+Reddit (www.reddit.com) is a popular social, link aggregation website that is 
+visited by millions of users everyday. Each submission is ranked by users
+using "upvotes" and "downvotes". A score is then given to the submission that 
+is the difference between upvotes and downvotes.
+
+Reddit does not have an easily accessible database of previous submissions, so
+it would be very useful to scrape the website and build a local database of
+previous submissions that we can query directly.
+
+
+==================
+Overview
+==================
+
+Although we can search Reddit by keyword and post count, each page in the
+results contains an 'after id' to the next page, so we can not jump to an
+arbitrary page. For later convenience, we will traverse the pages and store
+all submissions in a local database. 
+
+Reddit provides a conveneint json interface to all pages by simply appending
+'.json' to the URL. We can use this interface to easily parse the submissions
+data.
+
+We will only store the basic information related to a submission (upvotes,
+downvotes, poster, time, link url, etc.). We do not need to store the comments
+of each submission.
+
+==================
+Interface
+==================
+
+redditscraper module:
+
+class RedditDatabase(dbname)
+	Creates or opens an existing sqlite database named 'dbname'.
+	
+	writesubmission(submission)
+		Writes a submission (dictionary of each column value) to the database.
+		If a submission already in the database, it will not be duplicated.
+		
+	query(sql)
+		Runs a SQL query and returns rows of submissions.
+	
+
+class RedditScrapper(dbname)
+	Initializes the scraper with database named 'dbname'. 
+	
+	scrape(url,[pagelimit[,scorelimit,[delay]]])
+		Scrapes a Reddit url and writes all submissions on the page
+		to the database. The scraper traverses pages until it reaches
+		the last page or until the pagelimit or scorelimit is reached.
+		
+		If pagelimit (default: -1) or scorelimit (default: -1) is negative,
+		then that limit will not be taken into account when scraping.
+	
+		A delay (default: 1) in seconds is used to avoid overloading the
+		Reddit servers with requests.
+	
