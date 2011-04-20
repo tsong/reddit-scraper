@@ -2,44 +2,32 @@ import os.path
 import sqlite3
 
 
-text = 'TEXT'
-integer = 'INTEGER'
-real = 'REAL'
-boolean = 'BOOLEAN'
-tablecolumns = {'domain' : text,
-				'subreddit' : text,
-				'selftext_html' : text,
-				'selftext' : text,
-				'author' : text,
-			  	'score' : integer,
-			  	'over_18' : boolean,
-			  	'thumbnail' : text,
-			  	'subreddit_id' : text,
-			  	'downs' : integer,
-			  	'is_self' : booean,
-			  	'permalink' : text,
-			  	'name' : text,
-			  	'created' : real,
-			  	'url' : text,
-			  	'title' : text,
-			  	'created_utc' : real,
-			  	'num_comments' : integer,
-			  	'ups' : integer}
+_text = 'TEXT'
+_integer = 'INTEGER'
+_real = 'REAL'
+_boolean = 'BOOLEAN'
+_subcolumns = {'domain' : _text,
+				'subreddit' : _text,
+				'selftext_html' : _text,
+				'selftext' : _text,
+				'author' : _text,
+			  	'score' : _integer,
+			  	'over_18' : _boolean,
+			  	'thumbnail' : _text,
+			  	'subreddit_id' : _text,
+			  	'downs' : _integer,
+			  	'is_self' : _boolean,
+			  	'permalink' : _text,
+			  	'name' : _text,
+			  	'created' : _real,
+			  	'url' : _text,
+			  	'title' : _text,
+			  	'created_utc' : _real,
+			  	'num_comments' : _integer,
+			  	'ups' : _integer}
 
 
-TABLE_CREATE_SQL = '''
-CREATE TABLE submissions
-(
-domain type,
-media_embed type,
-levenshtein type,
-subreddit type,
-selftext_html type,
-
-
-)
-'''
-
+CREATE_TABLE_SQL = 'CREATE TABLE submissions (%s)' % ', '.join([c + ' ' + str(_subcolumns[c]) for c in _subcolumns.keys()])
 
 
 class RedditDatabase:
@@ -63,5 +51,6 @@ class RedditDatabase:
 		
 	def _inittables():
 		c = self.conn.getcursor()
+		c.execute(CREATE_TABLE_SQL)
 		conn.commit()
 		c.close()
