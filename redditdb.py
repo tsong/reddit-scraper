@@ -6,7 +6,7 @@ _text = 'TEXT'
 _integer = 'INTEGER'
 _real = 'REAL'
 _boolean = 'BOOLEAN'
-_subcolumns = {'domain' : _text,
+_columntypes = {'domain' : _text,
 				'subreddit' : _text,
 				'selftext_html' : _text,
 				'selftext' : _text,
@@ -26,8 +26,11 @@ _subcolumns = {'domain' : _text,
 			  	'num_comments' : _integer,
 			  	'ups' : _integer}
 
+_columns = _columntypes.keys()
 
-CREATE_TABLE_SQL = 'CREATE TABLE submissions (%s)' % ', '.join([c + ' ' + str(_subcolumns[c]) for c in _subcolumns.keys()])
+CREATE_TABLE_SQL = 'CREATE TABLE submissions (%s)' % ', '.join([c + ' ' + str(_columntypes[c]) for c in _columns])
+INSERT_SQL = 'INSERT INTO submissions (%s) VALUES (%s)' % ( ', '.join(_columns), ', '.join('?'*len(_columns)) )
+
 
 
 class RedditDatabase:
@@ -37,20 +40,21 @@ class RedditDatabase:
 		if not isfile:
 			self._inittables()
 		
-		
 	def writesubmission(self, sub):
-		c = self.conn.cursor()
-		c.execute('''INSERT INTO submissions VALUES ( ''')
+		row = tuple( [ sub[c] if c in sub.keys() else None for c in _columns ] )
+
+		cursor = self.conn.cursor()
+		cursor.execute('INSERT INTO submissions (%s) VALUES (%s)', row)
 		conn.commit()
-		c.close()
+		cursor.close()
 		
 	def query(self, sql):
-		c = self.conn.cursor()
-		c.execute(sql)
-		return c
+		cursor = self.conn.cursor()
+		cursor.execute(sql)
+		return cursor
 		
 	def _inittables():
-		c = self.conn.getcursor()
-		c.execute(CREATE_TABLE_SQL)
+		cursor = self.conn.getcursor()
+		cursor.execute(CREATE_TABLE_SQL)
 		conn.commit()
-		c.close()
+		cursor.close()

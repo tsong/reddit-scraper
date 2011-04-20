@@ -1,20 +1,40 @@
 import httplib
 import json
 import time
-import redditdb
+from redditdb import *
 
+
+_headers = {"User-agent" : "rs-v1"}
+
+def _prepareurl(url, after=None):
+	tokens = url.split('?')
+	if len(tokens) not in (1,2):
+		raise Exception( "Improperly formed URL %s", url )
+	
+	url = tokens[0] + '.json'
+	query = ''
+	if len(tokens) > 1: 
+		queries = tokens[1].split('&')
+		query += '&'.join([q for q in queries if not q.startswith('after=')])
+	if after: 
+		if len(query) > 0: 
+			query += '&'
+		query += 'after=%s' % after
+	if len(query) > 0:
+		url += '?' + query 
+	
+	return url
+		
 
 class RedditScraper:
-	_headers = {"User-agent" : "rs-v1"}
-
 	def __init__(self, dbname='default.db'):
-		self.db = RedditDatabase(dbname)
-		self.headers = _default_headers
+		#self.db = RedditDatabase(dbname)
+		pass
 		
 		
 	def scrape(self, url='/top/?t=all', pagelimit=-1, scorelimit=-1, delay=1):
 		url = _prepareurl(url)
-		self._scrape(url, pagelimit, karmalimit, delay)
+		self._scrape(url, pagelimit, scorelimit, delay)
 		
 		
 	def _scrape(self, url, pagelimit, scorelimit, delay, tries=3):
@@ -46,25 +66,7 @@ class RedditScraper:
 			print '    retrying... (%d tries remaining)' % (tries-1)
 			self._scrape(url, pagelimit, scorelimit, delay, tries-1)
 				
-	def _prepareurl(url, after=None):
-		tokens = url.split('?')
-		if len(tokens) not in (1,2):
-			raise Exception( "Improperly formed URL %s", url )
-		
-		url = tokens[0] + '.json'
-		query = ''
-		if len(tokens) > 1: 
-			queries = tokens[1].split('&')
-			query += '&'.join([q for q in queries if not q.startswith('after=')])
-		if after: 
-			if len(query) > 0: 
-				query += '&'
-			query += 'after=%s' % after
-		if len(query) > 0:
-			url += '?' + query 
-		
-		return url
-		
+
 			
 	def _parsepage(self, data):
 		page = json.loads(data)
@@ -77,8 +79,13 @@ class RedditScraper:
 		for child in page['data']['children']:
 			if child['kind'] == 't3':
 				sub = child['data']
-				self.db.writesubmission(sub)
+				#self.db.writesubmission(sub)
+				print sub
 				minscore = min( minscore, int(sub['score']) )
 		
 		return (after, minscore)
 		
+
+
+s = RedditScraper()
+s.scrape()
