@@ -39,13 +39,12 @@ Interface
 
 redditscraper module:
 
-class RedditDatabase(dbname)
-	Creates or opens an existing sqlite database named 'dbname'.
+searchscrape(words,[scraper,[pagelimit,[scorelimit]]])
+	Performs a Reddit search on each entry in words, and scrapes the results
+	up to a pagelimit (default: -1) and scorelimit (default: -1). If scraper
+	is not given as an parameter, a default RedditScraper object will
+	be used. The words parameter should be an iterable object of strings.
 	
-	writesubmission(submission)
-		Writes a submission (dictionary of each column value) to the database.
-		If a submission already in the database, it will not be duplicated.
-
 
 class RedditScrapper(dbname)
 	Initializes the scraper with database named 'dbname'. 
@@ -60,7 +59,17 @@ class RedditScrapper(dbname)
 	
 		A delay (default: 1) in seconds is used to avoid overloading the
 		Reddit servers with requests.
+
+redditdb module:
+
+class RedditDatabase(dbname)
+	Creates or opens an existing sqlite database named 'dbname'.
 	
+	writesubmission(submission)
+		Writes a submission (dictionary of each column value) to the database.
+		If a submission already in the database, it will not be duplicated.
+
+
 ==================
 Notes
 ==================
