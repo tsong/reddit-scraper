@@ -34,7 +34,7 @@ class RedditScraper:
 		pass
 		
 		
-	def scrape(self, url='/top/?t=all', pagelimit=-1, scorelimit=-1, delay=1):
+	def scrape(self, url='/top/?t=all', pagelimit=-1, scorelimit=-1, delay=2):
 		minscore = _maxscore
 		after = None
 		pagenum = 0
